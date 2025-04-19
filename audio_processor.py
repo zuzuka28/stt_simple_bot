@@ -1,6 +1,7 @@
 import os
 import logging
 import time
+import hashlib
 import torch
 from dataclasses import dataclass
 from typing import List
@@ -20,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class AppConfig:
-    whisper_model: str = "turbo"
+    whisper_model: str = "large"
     sat_model: str = "sat-3l-sm"
     llm_model: str = "ilyagusev/saiga_llama3"
     device: str = "cuda" if torch.cuda.is_available() else "cpu"
@@ -94,7 +95,6 @@ class TextPostProcessor:
         logger.info(f"Init TextPostProcessor with model: {self.ollama_model}")
 
     def _find_topic_shifts(self, sentences: List[str]) -> List[int]:
-        """Определяет индексы предложений с резкой сменой темы"""
         system_prompt = """Ты — TopicShiftAnalyzer.
         Проанализируй последовательность пронумерованных предложений и определи номера предложений, где происходит РЕЗКАЯ смена темы.
         Ответь ТОЛЬКО числами через запятую (например: "3,7"). Если смен нет — верни "0"."""
@@ -184,7 +184,7 @@ class TranscriptionPipeline:
     def _save_result(self, path: str, text: str) -> str:
         os.makedirs("output", exist_ok=True)
 
-        output_file = os.path.join("output", f"transcript_{path}_{int(time.time())}.md")
+        output_file = os.path.join("output", f"transcript_{time.time_ns()}.md")
 
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(text)
